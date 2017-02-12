@@ -1,0 +1,11 @@
+[Unit]
+Description=pyImageGenerator
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python /home/henry/pyLogger/log.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
