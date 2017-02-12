@@ -15,7 +15,7 @@ octlit = lambda n:int(n, 8)
 start_time = time.time()
 runtime = lambda: '{0:0.2f}s'.format(time.time()-start_time) 
 
-log_lastupdate = millis()-60000
+log_lastupdate = millis()-60001
 ext_temperature = None
 int_humidity={
   'value': None,
@@ -57,7 +57,7 @@ client = mqtt.Client("pyLogger")
 client.on_connect = on_connect
 client.on_message = on_message
 
-client.connect("127.0.0.1")
+client.connect("localhost")
 client.loop_start()
 
 try:
@@ -71,8 +71,6 @@ try:
       int_temperature["timestamp"] = int(time.time())
       int_humidity["timestamp"] = int(time.time())
       
-      #print(int_humidity, int_temperature)
-
       client.publish("home/in/temp", json.dumps(int_temperature), retain=True)
       client.publish("home/in/temp/value", '{0:0.1f}'.format(int_temperature["value"]), retain=True)
       client.publish("home/in/hum", json.dumps(int_humidity), retain=True)

@@ -34,7 +34,10 @@ if (args.length >= 2) {
                 height: bb.height
             };
           }
-          else page.clipRect = { top: 0, left: 0, width: 800, height: 600 };
+          else {
+            page.clipRect = { top: 0, left: 0, width: 800, height: 600 };
+          }
+          //console.log('rendering to'+ROOTDIR+'/out.png');  
           page.render(ROOTDIR+'/out.png');
           phantom.exit();
 /*        

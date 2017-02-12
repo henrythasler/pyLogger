@@ -23,6 +23,10 @@ def to_unix_time(dt):
 
 ROOTDIR = "/home/henry/pyLogger"
 
+#PHANTOMJS = ROOTDIR+"/phantomjs-2.1.1/phantomjs-2.1.1-linux-armhf"
+PHANTOMJS = ROOTDIR+"/phantomjs-armv7/bin/phantomjs"
+
+
 
 N = 10
 
@@ -236,8 +240,15 @@ annotations.append(dict(xref='paper', yref='paper', x=0.5, y=-0.12,
 layout['annotations'] = annotations
     
 fig = go.Figure(data=traces, layout=layout)
+
+
+#py.init_notebook_mode()
+#py.iplot({'data': [{'y': [4, 2, 3, 4]}], 'layout': {'title': 'Test Plot'}}, image='png')
+
+#py.plot(fig, auto_open=False, image = 'png', image_filename='out.png', output_type='file', image_width=800, image_height=600, filename='temp-chart.html', validate=False)
+
 py.plot(fig, filename=ROOTDIR+'/temp-chart.html', auto_open=False, show_link=False)
-call(["/home/henry/jsPhotoFrame/phantomjs-armv7/bin/phantomjs",ROOTDIR+"/capture.js", "file:///"+ROOTDIR+"/temp-chart.html"]) 
+call([PHANTOMJS,ROOTDIR+"/capture.js", "file:///"+ROOTDIR+"/temp-chart.html"]) 
 
 
 def on_connect(client, userdata, flags, rc):
