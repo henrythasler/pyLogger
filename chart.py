@@ -93,7 +93,7 @@ traces = []
 traces.append(go.Scatter(
         x=x,
 #        y=y1,
-        y=np.convolve(y1, np.ones((N,))/N, mode='valid'),
+        y=np.convolve(np.array(y1, dtype=np.float), np.ones((N,))/N, mode='valid'),
 #        mode = 'lines+markers',
         mode = 'lines',
         marker = dict(
@@ -108,8 +108,8 @@ traces.append(go.Scatter(
 
 traces.append(go.Scatter(
         x=x,
-	y=y3,
-#        y=np.convolve(y3, np.ones((N,))/N, mode='valid'),
+#	y=y3,
+        y=np.convolve(np.array(y3, dtype=np.float), np.ones((N,))/N, mode='valid'),
 #        mode = 'lines+markers',
         mode = 'lines',
         marker = dict(
