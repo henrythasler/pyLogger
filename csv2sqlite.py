@@ -32,8 +32,10 @@ try:
                 else:
                     csv_ext_temperature = float(row[3])
                 csv_time = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
-                cur.execute("INSERT INTO outside(time, temp, hum) VALUES(?, ?, ?)", (csv_time, csv_ext_temperature, None))
-                cur.execute("INSERT INTO livingroom(time, temp, hum) VALUES(?, ?, ?)", (csv_time, csv_temperature, int(csv_humidity)))
+                #timestamp = (csv_time - datetime(1970, 1, 1)).total_seconds()
+                timestamp = csv_time
+                cur.execute("INSERT INTO outside(time, temp, hum) VALUES(?, ?, ?)", (timestamp, csv_ext_temperature, None))
+                cur.execute("INSERT INTO livingroom(time, temp, hum) VALUES(?, ?, ?)", (timestamp, csv_temperature, int(csv_humidity)))
             except:
                 print("CSV Error:", row)
         con.commit()
