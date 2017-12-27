@@ -44,10 +44,6 @@ try:
 except lite.Error, e:
     print("Error {}:".format(e.args[0]))
     sys.exit(1)
-
-finally:
-    if con:
-        con.close()
         
 #setup mqtt stuff
 # The callback for when the client receives a CONNACK response from the server.
