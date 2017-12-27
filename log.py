@@ -61,15 +61,11 @@ def on_connect(client, userdata, flags, rc):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     global ext_temperature
-    global con, cur
     
 #    print(msg.topic+" "+msg.payload)
     ext_temperature = json.loads(msg.payload)
     ext_temperature["timestamp"] = int(ext_temperature["timestamp"])
-
-    cur.execute("INSERT INTO outside(time, temp, hum) VALUES(?, ?, ?)", (datetime.now(), ext_temperature["value"], None))
-    con.commit()
-    
+   
     #print(" "+str(ext_temperature))
     
 
@@ -97,6 +93,11 @@ try:
             client.publish("home/in/hum/value", int_humidity["value"], retain=True)
 
             cur.execute("INSERT INTO livingroom(time, temp, hum) VALUES(?, ?, ?)", (datetime.now(), int_temperature["value"], int_humidity["value"]))
+            
+            if (ext_temperature == None) or (( (millis()/1000 - ext_temperature["timestamp"]) > 600) and (ext_temperature["timestamp"] > 0)) :
+                pass
+            else:
+                cur.execute("INSERT INTO outside(time, temp, hum) VALUES(?, ?, ?)", (datetime.now(), ext_temperature["value"], None))
             con.commit()
                 
 #            if (ext_temperature == None) or (( (millis()/1000 - ext_temperature["timestamp"]) > 600) and (ext_temperature["timestamp"] > 0)) :
