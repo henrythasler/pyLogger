@@ -35,13 +35,20 @@ int_temperature={
 #if csvfile:
 #  logwriter = csv.writer(csvfile, delimiter=';')
 
+con = None
+cur = None
 try:
     con = lite.connect('temperature.db', detect_types=lite.PARSE_DECLTYPES)
     cur = con.cursor()
+
 except lite.Error, e:
-    print "Error %s:" % e.args[0]
+    print("Error {}:".format(e.args[0]))
     sys.exit(1)
 
+finally:
+    if con:
+        con.close()
+        
 #setup mqtt stuff
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
