@@ -3,8 +3,15 @@
 
 import sqlite3 as lite
 from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
 import numpy as np
+import sys
+import math
+
+import matplotlib
+# Force matplotlib to not use any Xwindows backend.
+matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
 
 con = None
 N = 10
@@ -53,13 +60,15 @@ try:
  
 
     fig, ax = plt.subplots()
-    fig.set_size_inches(10, 7.5)
+    fig.set_size_inches(8, 6)
 
-    ax.set_ylabel(u"Temperatur [°C]", fontsize=12)
+    ax.set_ylabel(u"Temperatur [°C]", fontsize=10)
     ax.set_title(u"Innen- und Außentemperatur", fontsize=20)
+    plt.setp(ax.get_xticklabels(), fontsize=10, color="#525252")
+    plt.setp(ax.get_yticklabels(), fontsize=10, color="#525252")
 
     # position bottom right
-    fig.text(0.5, 0, "Chart generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"),
+    fig.text(0.5, 0, datetime.now().strftime("%Y-%m-%d %H:%M"),
          fontsize=8, color='black',
          ha='center', va='bottom', alpha=0.4)
 
@@ -84,15 +93,29 @@ try:
                 )
 
 #    ax.plot(outside["x"], outside["y"], color="#005AC8", linewidth=2, marker='o', linestyle='-', markerfacecolor="white", ms=6, markevery=[outside["maxx"]])
-    ax.plot(outside["x"], outside["y"], color="#005AC8", linewidth=2)
+    ax.plot_date(outside["x"], outside["y"], xdate=True, color="#005AC8", linewidth=2, marker='', linestyle='-')
 
 #    ax.plot(livingroom["x"], livingroom["y"], color="#FA1400", linewidth=2, linestyle='-', marker='o', markerfacecolor="white", ms=6, markevery=[np.argmax(livingroom["y"])])
-    ax.plot(livingroom["x"], livingroom["y"], color="#FA1400", linewidth=2)
+    ax.plot_date(livingroom["x"], livingroom["y"], xdate=True, color="#FA1400", linewidth=2, marker='', linestyle='-')
 
-    ax.grid(True, zorder=5)
+    ax.grid(linewidth=.5, color="#cccccc", zorder=-5)
 
+    # make sure we see whole day intervals
+    xmin, xmax = plt.xlim()
+    plt.xlim(math.ceil(xmin), math.ceil(xmax))
+    
+    ax.axhline(linewidth=.5, color="black")
+    ax.xaxis.set_major_locator(matplotlib.dates.HourLocator(byhour=[6,18]))
+    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%a %Hh'))
+
+    # make sure we maximize the used drawing area
+    fig.autofmt_xdate()
     plt.tight_layout()
-    plt.show()
+
+#    plt.show() # use for interactive view only
+    
+    fig.savefig('out.png', dpi=100)     # save as file (800x600)
+    plt.close(fig)    # close the figure      
 
 except lite.Error, e:
     print "Error %s:" % e.args[0]
