@@ -12,12 +12,15 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
+import paho.mqtt.client as mqtt
+
+ROOTDIR = "/home/henry/pyLogger"
 
 con = None
 N = 10
 
 try:
-    con = lite.connect('temperature.db', detect_types=lite.PARSE_DECLTYPES)
+    con = lite.connect(ROOTDIR+'/temperature.db', detect_types=lite.PARSE_DECLTYPES)
     
     cur = con.cursor()
     #cur.execute('SELECT SQLITE_VERSION()')
@@ -114,7 +117,7 @@ try:
 
 #    plt.show() # use for interactive view only
     
-    fig.savefig('out.png', dpi=100)     # save as file (800x600)
+    fig.savefig(ROOTDIR+'/out.png', dpi=100)     # save as file (800x600)
     plt.close(fig)    # close the figure      
 
 except lite.Error, e:
@@ -124,3 +127,25 @@ except lite.Error, e:
 finally:
     if con:
         con.close()
+
+
+def on_connect(client, userdata, flags, rc):
+    #print("Connected to mqtt broker with result code "+str(rc))
+    with open(ROOTDIR+'/out.png') as f:
+      img = f.read()
+      f.close()
+      byteArray = bytearray(img)
+      client.publish("home/img/tempchart", byteArray, retain=True)
+      
+def on_publish(client, userdata, mid):
+  # Disconnect after our message has been sent.
+  client.disconnect()
+ 
+client = mqtt.Client('chart-%s' % os.getpid())
+client.on_connect = on_connect
+client.on_publish = on_publish
+ 
+client.connect("127.0.0.1")
+client.loop_start()
+time.sleep(2)
+client.loop_stop()
