@@ -20,9 +20,9 @@ try:
     con = lite.connect('temperature.db', detect_types=lite.PARSE_DECLTYPES)
     
     cur = con.cursor()
-    cur.execute('SELECT SQLITE_VERSION()')
-    data = cur.fetchone()
-    print "SQLite version: %s" % data                
+    #cur.execute('SELECT SQLITE_VERSION()')
+    #data = cur.fetchone()
+    #print "SQLite version: %s" % data                
 
 
     cur.execute("SELECT time, temp FROM outside WHERE time >= date('now', '-7 day')")
