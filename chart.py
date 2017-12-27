@@ -97,13 +97,13 @@ try:
 #                arrowprops=dict(facecolor='black', connectionstyle="arc3,rad=-0.2", arrowstyle='->'),
                 )
 
+    ax.grid(linewidth=.5, linestyle='-', color="#cccccc")
+
 #    ax.plot(outside["x"], outside["y"], color="#005AC8", linewidth=2, marker='o', linestyle='-', markerfacecolor="white", ms=6, markevery=[outside["maxx"]])
     ax.plot_date(outside["x"], outside["y"], xdate=True, color="#005AC8", linewidth=2, marker='', linestyle='-')
 
 #    ax.plot(livingroom["x"], livingroom["y"], color="#FA1400", linewidth=2, linestyle='-', marker='o', markerfacecolor="white", ms=6, markevery=[np.argmax(livingroom["y"])])
     ax.plot_date(livingroom["x"], livingroom["y"], xdate=True, color="#FA1400", linewidth=2, marker='', linestyle='-')
-
-    ax.grid(linewidth=.5, color="#cccccc", zorder=-5)
 
     # make sure we see whole day intervals
     xmin, xmax = plt.xlim()
