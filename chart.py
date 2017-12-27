@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import sys
 import math
+import os
 
 import matplotlib
 # Force matplotlib to not use any Xwindows backend.
