@@ -11,6 +11,8 @@ import paho.mqtt.client as mqtt
 import json
 import sqlite3 as lite
 
+ROOTDIR = "/home/henry/pyLogger"
+
 millis = lambda: int(round(time.time() * 1000))
 octlit = lambda n:int(n, 8)
 start_time = time.time()
@@ -38,7 +40,7 @@ int_temperature={
 con = None
 cur = None
 try:
-    con = lite.connect('temperature.db', detect_types=lite.PARSE_DECLTYPES)
+    con = lite.connect(ROOTDIR+'/temperature.db', detect_types=lite.PARSE_DECLTYPES)
     cur = con.cursor()
 
 except lite.Error, e:
