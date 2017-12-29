@@ -80,7 +80,7 @@ try:
         if (millis() - log_lastupdate) > 60000:
             log_lastupdate = millis()
             int_humidity["value"], int_temperature["value"] = Adafruit_DHT.read_retry(Adafruit_DHT.AM2302, 4)
-            int_humidity["value"] = int(int_humidity["value"] - 20)
+            int_humidity["value"] = int(int_humidity["value"] - 0)    # offset correction
             int_temperature["value"] = round(int_temperature["value"], 1)
             int_temperature["timestamp"] = int(time.time())
             int_humidity["timestamp"] = int(time.time())

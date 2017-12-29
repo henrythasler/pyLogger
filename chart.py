@@ -14,6 +14,8 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as path_effects
+
 import paho.mqtt.client as mqtt
 
 ROOTDIR = "/home/henry/pyLogger"
@@ -37,9 +39,9 @@ try:
     outside = {}
     outside["y"] = np.convolve(np.array(data[1], dtype=np.float), np.ones((N,))/N, mode='valid')
     outside["x"] = data[0][N/2:data[0].size-N/2+1]
-    outside["maxx"] = np.argmax(outside["y"])
+    outside["maxx"] = np.nanargmax(outside["y"])
     outside["maxy"] = outside["y"][outside["maxx"]]
-    outside["minx"] = np.argmin(outside["y"])
+    outside["minx"] = np.nanargmin(outside["y"])
     outside["miny"] = outside["y"][outside["minx"]]
 
     cur.execute("SELECT time, temp FROM livingroom WHERE time >= date('now', '-7 day')")
@@ -58,9 +60,9 @@ try:
     livingroom = {}
     livingroom["y"] = np.convolve(np.array(data[1], dtype=np.float), np.ones((N,))/N, mode='valid')
     livingroom["x"] = data[0][N/2:data[0].size-N/2+1]
-    livingroom["maxx"] = np.argmax(livingroom["y"])
+    livingroom["maxx"] = np.nanargmax(livingroom["y"])
     livingroom["maxy"] = livingroom["y"][livingroom["maxx"]]
-    livingroom["minx"] = np.argmin(livingroom["y"])
+    livingroom["minx"] = np.nanargmin(livingroom["y"])
     livingroom["miny"] = livingroom["y"][livingroom["minx"]]
  
 
@@ -79,35 +81,39 @@ try:
 
     
     ax.annotate(u"↑{:.1f}°C".format(outside["maxy"]), xy=(outside["x"][outside["maxx"]], outside["maxy"]), 
-                xytext=(outside["x"][outside["maxx"]+100], outside["maxy"]),
+                textcoords="offset pixels", xytext=(0, 5), 
+                path_effects=[path_effects.Stroke(linewidth=2, foreground='white'), path_effects.Normal()]
 #                arrowprops=dict(facecolor='black', connectionstyle="arc3,rad=-0.2", arrowstyle='->'),
                 )
     ax.annotate(u"↓{:.1f}°C".format(outside["miny"]), xy=(outside["x"][outside["minx"]], outside["miny"]), 
-                xytext=(outside["x"][outside["minx"]+100], outside["miny"]-.4),
+                textcoords="offset pixels", xytext=(0, -15), 
+                path_effects=[path_effects.Stroke(linewidth=2, foreground='white'), path_effects.Normal()]
 #                arrowprops=dict(facecolor='black', connectionstyle="arc3,rad=-0.2", arrowstyle='->'),
                 )
 
     ax.annotate(u"↑{:.1f}°C".format(livingroom["maxy"]), xy=(livingroom["x"][livingroom["maxx"]], livingroom["maxy"]), 
-                xytext=(livingroom["x"][livingroom["maxx"]+100], livingroom["maxy"]),
+                textcoords="offset pixels", xytext=(0, 5), 
+                path_effects=[path_effects.Stroke(linewidth=2, foreground='white'), path_effects.Normal()]
 #                arrowprops=dict(facecolor='black', connectionstyle="arc3,rad=-0.2", arrowstyle='->'),
                 )
 
     ax.annotate(u"↓{:.1f}°C".format(livingroom["miny"]), xy=(livingroom["x"][livingroom["minx"]], livingroom["miny"]), 
-                xytext=(livingroom["x"][livingroom["minx"]+100], livingroom["miny"]-.4),
+                textcoords="offset pixels", xytext=(0, -15), 
+                path_effects=[path_effects.Stroke(linewidth=2, foreground='white'), path_effects.Normal()]
 #                arrowprops=dict(facecolor='black', connectionstyle="arc3,rad=-0.2", arrowstyle='->'),
                 )
 
     ax.grid(linewidth=.5, linestyle='-', color="#cccccc")
 
 #    ax.plot(outside["x"], outside["y"], color="#005AC8", linewidth=2, marker='o', linestyle='-', markerfacecolor="white", ms=6, markevery=[outside["maxx"]])
-    ax.plot_date(outside["x"], outside["y"], xdate=True, color="#005AC8", linewidth=2, marker='', linestyle='-')
+    ax.plot_date(outside["x"], outside["y"], xdate=True, color="#005AC8", linewidth=2, linestyle='-', markerfacecolor="white", marker='o', ms=4,  markevery=[outside["maxx"], outside["minx"]])
 
 #    ax.plot(livingroom["x"], livingroom["y"], color="#FA1400", linewidth=2, linestyle='-', marker='o', markerfacecolor="white", ms=6, markevery=[np.argmax(livingroom["y"])])
-    ax.plot_date(livingroom["x"], livingroom["y"], xdate=True, color="#FA1400", linewidth=2, marker='', linestyle='-')
+    ax.plot_date(livingroom["x"], livingroom["y"], xdate=True, color="#FA1400", linewidth=2, linestyle='-', markerfacecolor="white", marker='o', ms=4,  markevery=[livingroom["maxx"], livingroom["minx"]])
 
     # make sure we see whole day intervals
     xmin, xmax = plt.xlim()
-    plt.xlim(math.ceil(xmin), math.ceil(xmax))
+    plt.xlim(math.ceil(xmin), xmax)
     
     ax.axhline(linewidth=.5, color="black")
     ax.xaxis.set_major_locator(matplotlib.dates.HourLocator(byhour=[6,18]))
