@@ -1,10 +1,12 @@
+# copy to /etc/systemd/system/
 [Unit]
-Description=pyImageGenerator
+Description=pyLogger
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python /home/henry/pyLogger/log.py
+WorkingDirectory=/home/henry/pyLogger
+ExecStart=/usr/bin/python3 log.py
 Restart=on-failure
 
 [Install]

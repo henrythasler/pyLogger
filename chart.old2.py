@@ -1,12 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sqlite3 as lite
 from datetime import datetime, timedelta
-import time
-
-# pip3 install numpy
 import numpy as np
-
 import sys
 import math
 import os
@@ -16,15 +13,10 @@ import matplotlib
 # Force matplotlib to not use any Xwindows backend.
 matplotlib.use('Agg')
 
-# pip3 install matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
 
 import paho.mqtt.client as mqtt
-
-# sudo apt install postgresql-client libpq-dev python3-dev
-# sudo pip install psycopg2
-import psycopg2 as pg
 
 ROOTDIR = "/home/henry/pyLogger"
 
@@ -33,51 +25,46 @@ con = None
 N = 16 # must be an equal number
 
 try:
-    con = pg.connect("dbname='home' user='grafana' host='omv4' password='grafana'")
+    con = lite.connect(ROOTDIR+'/temperature.db', detect_types=lite.PARSE_DECLTYPES)
+    
     cur = con.cursor()
+    #cur.execute('SELECT SQLITE_VERSION()')
+    #data = cur.fetchone()
+    #print "SQLite version: %s" % data                
 
-    cur.execute("SELECT timestamp at time zone 'UTC' as timestamp, \
-        avg(temperature) OVER ( \
-            ORDER BY timestamp ASC \
-            ROWS BETWEEN 5 PRECEDING AND 5 FOLLOWING \
-        ) as outside FROM outside WHERE timestamp >= date_trunc('day', current_timestamp - INTERVAL '7 day') at time zone 'UTC+3'")
+
+    cur.execute("SELECT time, temp FROM outside WHERE time >= date('now', '-7 day')")
     con.commit()
     data = np.transpose(np.array(cur.fetchall()))
 
     outside = {}
-    outside["y"] = data[1]
-    # convert utc to local
-    outside["x"] = data[0] + (datetime.fromtimestamp(time.time()) - datetime.utcfromtimestamp(time.time()))
+    outside["y"] = np.convolve(np.array(data[1], dtype=np.float), np.ones((N,))/N, mode='valid')
+    outside["x"] = data[0][N/2:data[0].size-N/2+1]
     outside["maxx"] = np.nanargmax(outside["y"])
     outside["maxy"] = outside["y"][outside["maxx"]]
     outside["minx"] = np.nanargmin(outside["y"])
     outside["miny"] = outside["y"][outside["minx"]]
 
-    cur.execute("with stats as (    \
-        select \
-        timestamp at time zone 'UTC' as timestamp, \
-        temperature, \
-        avg(temperature) OVER ( \
-            ORDER BY timestamp ASC \
-            ROWS BETWEEN 10 PRECEDING AND 10 FOLLOWING \
-        ) AS moving_avg \
-        from livingroom \
-        where timestamp >= date_trunc('day', current_timestamp - INTERVAL '7 day') at time zone 'UTC+3' \
-        group by timestamp \
-        ) \
-        SELECT timestamp, avg(temperature) OVER ( \
-        ORDER BY timestamp ASC \
-        ROWS BETWEEN 5 PRECEDING AND 5 FOLLOWING \
-        ) AS smoothed \
-        from stats \
-        where temperature >= (moving_avg-0.1) and timestamp >= date_trunc('day', current_timestamp - INTERVAL '7 day') at time zone 'UTC+3'")
+    cur.execute("SELECT time, temp FROM livingroom WHERE time >= date('now', '-7 day')")
     con.commit()
     data = np.transpose(np.array(cur.fetchall()))
 
+    # filter sensor glitches
+    limit = 1
+    b = np.insert(np.diff(data[1]), -1, [0])
+    c = np.where(np.abs(b)>limit)[0]
+#    c = c[::2]
+    for i in c:
+        if i > 0:
+            for j in range(2):
+                data[1][min(data[1].size-1,i+j)] = data[1][i-1]
+#    data[1] = np.where(np.abs(np.insert(np.diff(data[1]), 0, [0])) > limit, np.nan, data[1])
+
     livingroom = {}
-    livingroom["y"] = data[1]
-    # convert utc to local
-    livingroom["x"] = data[0] + (datetime.fromtimestamp(time.time()) - datetime.utcfromtimestamp(time.time()))
+    livingroom["y"] = np.convolve(np.array(data[1], dtype=np.float), np.ones((N,))/N, mode='valid')
+    livingroom["x"] = data[0][N/2:data[0].size-N/2+1]
+#    livingroom["y"] = data[1]
+#    livingroom["x"] = data[0]
     livingroom["maxx"] = np.nanargmax(livingroom["y"])
     livingroom["maxy"] = livingroom["y"][livingroom["maxx"]]
     livingroom["minx"] = np.nanargmin(livingroom["y"])
@@ -146,8 +133,8 @@ try:
     fig.savefig(ROOTDIR+'/out.png', dpi=100)     # save as file (800x600)
     plt.close(fig)    # close the figure      
 
-except Exception as e:
-    print("Error %s:" % e.args[0])
+except lite.Error, e:
+    print "Error %s:" % e.args[0]
     sys.exit(1)
     
 finally:
@@ -157,7 +144,7 @@ finally:
 
 def on_connect(client, userdata, flags, rc):
     #print("Connected to mqtt broker with result code "+str(rc))
-    with open(ROOTDIR+'/out.png', mode='rb') as f:
+    with open(ROOTDIR+'/out.png') as f:
       img = f.read()
       f.close()
       byteArray = bytearray(img)
@@ -171,7 +158,7 @@ client = mqtt.Client('chart-%s' % os.getpid())
 client.on_connect = on_connect
 client.on_publish = on_publish
  
-client.connect("omv4.fritz.box")
+client.connect("127.0.0.1")
 client.loop_start()
 time.sleep(2)
 client.loop_stop()

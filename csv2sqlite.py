@@ -14,7 +14,7 @@ try:
     cur = con.cursor()
     cur.execute('SELECT SQLITE_VERSION()')
     data = cur.fetchone()
-    print "SQLite version: %s" % data                
+    print("SQLite version: %s" % data)
 
     cur.execute("DROP TABLE IF EXISTS outside")
     cur.execute("DROP TABLE IF EXISTS livingroom")
@@ -40,9 +40,9 @@ try:
                 print("CSV Error:", row)
         con.commit()
 
-except lite.Error, e:
+except lite.Error as e:
     
-    print "Error %s:" % e.args[0]
+    print("Error %s:" % e.args[0])
     sys.exit(1)
     
 finally:

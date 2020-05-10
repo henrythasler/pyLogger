@@ -5,11 +5,17 @@ from __future__ import print_function
 import time
 from datetime import datetime
 from struct import *
-import Adafruit_DHT
+import adafruit_dht
+import board
 import csv
 import paho.mqtt.client as mqtt
 import json
 import sqlite3 as lite
+
+
+# sudo apt install postgresql-client libpq-dev
+# sudo pip install psycopg2
+import psycopg2 as pg
 
 ROOTDIR = "/home/henry/pyLogger"
 
@@ -42,10 +48,18 @@ cur = None
 try:
     con = lite.connect(ROOTDIR+'/temperature.db', detect_types=lite.PARSE_DECLTYPES)
     cur = con.cursor()
-
-except lite.Error, e:
+except lite.Error as e:
     print("Error {}:".format(e.args[0]))
     sys.exit(1)
+
+pg_con = None
+pg_cur = None   
+try:
+    pg_con = pg.connect("dbname='home' user='postgres' host='omv4.fritz.box' password='postgres'")
+    pg_cur = pg_con.cursor()
+except Exception as e:
+    print("Postgres Error {}:".format(e))
+
         
 #setup mqtt stuff
 # The callback for when the client receives a CONNACK response from the server.
@@ -71,15 +85,21 @@ client = mqtt.Client("pyLogger")
 client.on_connect = on_connect
 client.on_message = on_message
 
-client.connect("localhost")
+client.connect("omv4.fritz.box")
 client.loop_start()
+
+dhtDevice = adafruit_dht.DHT22(board.D4)
 
 try:
     while 1:
           # save received data
         if (millis() - log_lastupdate) > 60000:
             log_lastupdate = millis()
-            int_humidity["value"], int_temperature["value"] = Adafruit_DHT.read_retry(Adafruit_DHT.AM2302, 4)
+            try:
+                int_humidity["value"] = dhtDevice.temperature
+                int_temperature["value"] = dhtDevice.humidity
+            except:
+                pass
             int_humidity["value"] = int(int_humidity["value"] - 0)    # offset correction
             int_temperature["value"] = round(int_temperature["value"], 1)
             int_temperature["timestamp"] = int(time.time())
@@ -91,12 +111,16 @@ try:
             client.publish("home/in/hum/value", int_humidity["value"], retain=True)
 
             cur.execute("INSERT INTO livingroom(time, temp, hum) VALUES(?, ?, ?)", (datetime.now(), int_temperature["value"], int_humidity["value"]))
+            pg_cur.execute("INSERT INTO livingroom(timestamp, temperature, humidity) VALUES(%s, %s, %s)", (datetime.utcnow(), int_temperature["value"], int_humidity["value"]))
             
             if (ext_temperature == None) or (( (millis()/1000 - ext_temperature["timestamp"]) > 600) and (ext_temperature["timestamp"] > 0)) :
                 pass
             else:
                 cur.execute("INSERT INTO outside(time, temp, hum) VALUES(?, ?, ?)", (datetime.now(), ext_temperature["value"], None))
+                pg_cur.execute("INSERT INTO outside(timestamp, temperature, humidity) VALUES(%s, %s, %s)", (datetime.utcnow(), ext_temperature["value"], None))
             con.commit()
+            pg_con.commit()
+
                 
 #            if (ext_temperature == None) or (( (millis()/1000 - ext_temperature["timestamp"]) > 600) and (ext_temperature["timestamp"] > 0)) :
 #              logwriter.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), '{0:0.1f}'.format(int_temperature["value"]), '{0:0.0f}'.format(int_humidity["value"]), '-'])
