@@ -96,8 +96,8 @@ try:
         if (millis() - log_lastupdate) > 60000:
             log_lastupdate = millis()
             try:
-                int_humidity["value"] = dhtDevice.temperature
-                int_temperature["value"] = dhtDevice.humidity
+                int_temperature["value"] = dhtDevice.temperature
+                int_humidity["value"] = dhtDevice.humidity
             except:
                 pass
             int_humidity["value"] = int(int_humidity["value"] - 0)    # offset correction
