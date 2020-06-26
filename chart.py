@@ -33,7 +33,7 @@ con = None
 N = 16 # must be an equal number
 
 try:
-    con = pg.connect("dbname='home' user='grafana' host='omv4' password='grafana'")
+    con = pg.connect("dbname='home' user='grafana' host='omv4.fritz.box' password='grafana'")
     cur = con.cursor()
 
     cur.execute("SELECT timestamp at time zone 'UTC' as timestamp, \
@@ -43,15 +43,15 @@ try:
         ) as outside FROM outside WHERE timestamp >= date_trunc('day', current_timestamp - INTERVAL '7 day') at time zone 'UTC+3'")
     con.commit()
     data = np.transpose(np.array(cur.fetchall()))
-
-    outside = {}
-    outside["y"] = data[1]
-    # convert utc to local
-    outside["x"] = data[0] + (datetime.fromtimestamp(time.time()) - datetime.utcfromtimestamp(time.time()))
-    outside["maxx"] = np.nanargmax(outside["y"])
-    outside["maxy"] = outside["y"][outside["maxx"]]
-    outside["minx"] = np.nanargmin(outside["y"])
-    outside["miny"] = outside["y"][outside["minx"]]
+    if len(data):
+        outside = {}
+        outside["y"] = data[1]
+        # convert utc to local
+        outside["x"] = data[0] + (datetime.fromtimestamp(time.time()) - datetime.utcfromtimestamp(time.time()))
+        outside["maxx"] = np.nanargmax(outside["y"])
+        outside["maxy"] = outside["y"][outside["maxx"]]
+        outside["minx"] = np.nanargmin(outside["y"])
+        outside["miny"] = outside["y"][outside["minx"]]
 
     cur.execute("with stats as (    \
         select \
@@ -75,13 +75,14 @@ try:
     data = np.transpose(np.array(cur.fetchall()))
 
     livingroom = {}
-    livingroom["y"] = data[1]
-    # convert utc to local
-    livingroom["x"] = data[0] + (datetime.fromtimestamp(time.time()) - datetime.utcfromtimestamp(time.time()))
-    livingroom["maxx"] = np.nanargmax(livingroom["y"])
-    livingroom["maxy"] = livingroom["y"][livingroom["maxx"]]
-    livingroom["minx"] = np.nanargmin(livingroom["y"])
-    livingroom["miny"] = livingroom["y"][livingroom["minx"]]
+    if len(data):
+        livingroom["y"] = data[1]
+        # convert utc to local
+        livingroom["x"] = data[0] + (datetime.fromtimestamp(time.time()) - datetime.utcfromtimestamp(time.time()))
+        livingroom["maxx"] = np.nanargmax(livingroom["y"])
+        livingroom["maxy"] = livingroom["y"][livingroom["maxx"]]
+        livingroom["minx"] = np.nanargmin(livingroom["y"])
+        livingroom["miny"] = livingroom["y"][livingroom["minx"]]
  
 
     fig, ax = plt.subplots()
@@ -109,17 +110,18 @@ try:
 #                arrowprops=dict(facecolor='black', connectionstyle="arc3,rad=-0.2", arrowstyle='->'),
                 )
 
-    ax.annotate(u"↑{:.1f}°C".format(livingroom["maxy"]), xy=(livingroom["x"][livingroom["maxx"]], livingroom["maxy"]), 
-                textcoords="offset pixels", xytext=(0, 5), 
-                path_effects=[path_effects.Stroke(linewidth=2, foreground='white'), path_effects.Normal()]
-#                arrowprops=dict(facecolor='black', connectionstyle="arc3,rad=-0.2", arrowstyle='->'),
-                )
+    if 'maxy' in livingroom:
+        ax.annotate(u"↑{:.1f}°C".format(livingroom["maxy"]), xy=(livingroom["x"][livingroom["maxx"]], livingroom["maxy"]), 
+                    textcoords="offset pixels", xytext=(0, 5), 
+                    path_effects=[path_effects.Stroke(linewidth=2, foreground='white'), path_effects.Normal()]
+    #                arrowprops=dict(facecolor='black', connectionstyle="arc3,rad=-0.2", arrowstyle='->'),
+                    )
 
-    ax.annotate(u"↓{:.1f}°C".format(livingroom["miny"]), xy=(livingroom["x"][livingroom["minx"]], livingroom["miny"]), 
-                textcoords="offset pixels", xytext=(0, -15), 
-                path_effects=[path_effects.Stroke(linewidth=2, foreground='white'), path_effects.Normal()]
-#                arrowprops=dict(facecolor='black', connectionstyle="arc3,rad=-0.2", arrowstyle='->'),
-                )
+        ax.annotate(u"↓{:.1f}°C".format(livingroom["miny"]), xy=(livingroom["x"][livingroom["minx"]], livingroom["miny"]), 
+                    textcoords="offset pixels", xytext=(0, -15), 
+                    path_effects=[path_effects.Stroke(linewidth=2, foreground='white'), path_effects.Normal()]
+    #                arrowprops=dict(facecolor='black', connectionstyle="arc3,rad=-0.2", arrowstyle='->'),
+                    )
 
     ax.grid(linewidth=.5, linestyle='-', color="#cccccc")
 
@@ -127,7 +129,8 @@ try:
     ax.plot_date(outside["x"], outside["y"], xdate=True, color="#005AC8", linewidth=2, linestyle='-', markerfacecolor="white", marker='o', ms=4,  markevery=[outside["maxx"], outside["minx"]])
 
 #    ax.plot(livingroom["x"], livingroom["y"], color="#FA1400", linewidth=2, linestyle='-', marker='o', markerfacecolor="white", ms=6, markevery=[np.argmax(livingroom["y"])])
-    ax.plot_date(livingroom["x"], livingroom["y"], xdate=True, color="#FA1400", linewidth=2, linestyle='-', markerfacecolor="white", marker='o', ms=4,  markevery=[livingroom["maxx"], livingroom["minx"]])
+    if 'y' in livingroom:
+        ax.plot_date(livingroom["x"], livingroom["y"], xdate=True, color="#FA1400", linewidth=2, linestyle='-', markerfacecolor="white", marker='o', ms=4,  markevery=[livingroom["maxx"], livingroom["minx"]])
 
     # make sure we see whole day intervals
     xmin, xmax = plt.xlim()

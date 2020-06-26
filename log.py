@@ -5,7 +5,7 @@ from __future__ import print_function
 import time
 from datetime import datetime
 from struct import *
-import adafruit_dht
+#import adafruit_dht
 import board
 import csv
 import paho.mqtt.client as mqtt
@@ -88,30 +88,30 @@ client.on_message = on_message
 client.connect("omv4.fritz.box")
 client.loop_start()
 
-dhtDevice = adafruit_dht.DHT22(board.D4)
+#dhtDevice = adafruit_dht.DHT22(board.D4)
 
 try:
     while 1:
           # save received data
         if (millis() - log_lastupdate) > 60000:
             log_lastupdate = millis()
-            try:
-                int_temperature["value"] = dhtDevice.temperature
-                int_humidity["value"] = dhtDevice.humidity
-            except:
-                pass
-            int_humidity["value"] = int(int_humidity["value"] - 0)    # offset correction
-            int_temperature["value"] = round(int_temperature["value"], 1)
-            int_temperature["timestamp"] = int(time.time())
-            int_humidity["timestamp"] = int(time.time())
+#            try:
+                #int_temperature["value"] = dhtDevice.temperature
+                #int_humidity["value"] = dhtDevice.humidity
+#            except:
+#                pass
+#            int_humidity["value"] = int(int_humidity["value"] - 0)    # offset correction
+#            int_temperature["value"] = round(int_temperature["value"], 1)
+#            int_temperature["timestamp"] = int(time.time())
+#            int_humidity["timestamp"] = int(time.time())
             
-            client.publish("home/in/temp", json.dumps(int_temperature), retain=True)
-            client.publish("home/in/temp/value", '{0:0.1f}'.format(int_temperature["value"]), retain=True)
-            client.publish("home/in/hum", json.dumps(int_humidity), retain=True)
-            client.publish("home/in/hum/value", int_humidity["value"], retain=True)
+#            client.publish("home/in/temp", json.dumps(int_temperature), retain=True)
+#            client.publish("home/in/temp/value", '{0:0.1f}'.format(int_temperature["value"]), retain=True)
+#            client.publish("home/in/hum", json.dumps(int_humidity), retain=True)
+#            client.publish("home/in/hum/value", int_humidity["value"], retain=True)
 
-            cur.execute("INSERT INTO livingroom(time, temp, hum) VALUES(?, ?, ?)", (datetime.now(), int_temperature["value"], int_humidity["value"]))
-            pg_cur.execute("INSERT INTO livingroom(timestamp, temperature, humidity) VALUES(%s, %s, %s)", (datetime.utcnow(), int_temperature["value"], int_humidity["value"]))
+#           cur.execute("INSERT INTO livingroom(time, temp, hum) VALUES(?, ?, ?)", (datetime.now(), int_temperature["value"], int_humidity["value"]))
+#            pg_cur.execute("INSERT INTO livingroom(timestamp, temperature, humidity) VALUES(%s, %s, %s)", (datetime.utcnow(), int_temperature["value"], int_humidity["value"]))
             
             if (ext_temperature == None) or (( (millis()/1000 - ext_temperature["timestamp"]) > 600) and (ext_temperature["timestamp"] > 0)) :
                 pass
